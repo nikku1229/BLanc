@@ -1,0 +1,142 @@
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8vh 0;
+}
+
+.auth-card {
+  border-radius: 16px;
+  padding: 25px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: var(--white-shadow);
+}
+
+.auth-card .logo {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-card .logo h1 {
+  font-size: 32px;
+  color: var(--white);
+  font-weight: 600;
+}
+
+.auth-card .logo p {
+  color: var(--white);
+}
+
+.auth-card h2 {
+  font-size: 24px;
+  color: var(--white);
+}
+
+.auth-card .subtitle {
+  color: var(--white);
+  margin-bottom: 14px;
+}
+
+.auth-card .form-group {
+  margin-bottom: 15px;
+
+  p {
+    margin-top: 8px;
+    a {
+      color: var(--secondary-color);
+      text-decoration: none;
+      font-weight: 600;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+.auth-card .form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 400;
+  color: var(--white);
+  font-size: 14px;
+}
+
+.auth-card .form-group input {
+  width: 100%;
+  padding: 12px 8px;
+  border: 2px solid var(--white);
+  color: var(--white);
+  background-color: transparent;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+
+  &::placeholder {
+    color: var(--gray);
+  }
+}
+
+.auth-card .form-group input:focus {
+  border-color: var(--white);
+}
+
+.auth-card .form-group input.error {
+  border-color: var(--red);
+}
+
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    width: 100%;
+  }
+
+  .toggle-pass {
+    position: absolute;
+    width: 20px;
+    height: 10px;
+    right: 10px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .toggle-pass.hide {
+    background-color: var(--gray);
+  }
+
+  .toggle-pass.show {
+    background-color: var(--secondary-color);
+  }
+}
+
+.auth-card .btn-primary {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+}
+
+.auth-card .auth-footer {
+  text-align: center;
+  margin-top: 16px;
+  color: var(--gray);
+}
+
+.auth-card .auth-footer a {
+  color: var(--secondary-color);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-card .auth-footer a:hover {
+  text-decoration: underline;
+}
+
+.auth-card .error-message {
+  color: var(--red);
+  margin-bottom: 10px;
+  font-size: 14px;
+}

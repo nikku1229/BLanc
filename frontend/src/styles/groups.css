@@ -1,0 +1,135 @@
+.group-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--white-shadow);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.group-card .group-name {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.group-card .group-description {
+  color: var(--gray);
+  font-size: 14px;
+  margin: 4px 0 0;
+}
+
+.group-card .group-type {
+  width: max-content;
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 400;
+  background: var(--white);
+  color: var(--primary-color);
+}
+
+.group-card .group-balance {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--secondary-color);
+}
+
+.group-card .group-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray);
+  justify-self: end;
+}
+
+/* Group form */
+.modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20px;
+  background-color: var(--black-variant-750);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  backdrop-filter: blur(1px);
+}
+
+.group-form {
+  width: 100%;
+  max-width: 500px;
+  padding: 24px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: var(--white-shadow);
+  border-radius: 18px;
+  background-color: var(--black-variant-750);
+
+  input,
+  select,
+  textarea {
+    background-color: transparent;
+    color: var(--white);
+    padding-left: 8px;
+    padding-right: 8px;
+
+    &::placeholder {
+      color: var(--gray);
+    }
+  }
+
+  option {
+    background-color: var(--black);
+    color: var(--white);
+  }
+
+  .form-btns {
+    display: flex;
+    gap: 14px;
+    margin-top: 15px;
+
+    .btn-custom {
+      background-color: var(--gray);
+
+      &:hover {
+        background-color: var(--secondary-color);
+        color: var(--white);
+      }
+    }
+
+    button {
+      flex: 1;
+    }
+  }
+}
+
+.group-form .form-group {
+  margin-bottom: 10px;
+}
+
+.group-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .groups-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .group-form .form-row {
+    grid-template-columns: 1fr;
+  }
+}
