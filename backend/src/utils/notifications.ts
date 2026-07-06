@@ -1,20 +1,45 @@
 import { sendEmail, getTransactionEmailTemplate } from "../config/email";
 import { sendSms, getSmsContent } from "../config/sms";
 
+// --------------------- Types ---------------------
 interface NotificationData {
-  user: any;
-  group: any;
-  transaction: any;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    phoneNumber?: string;
+    notificationPreferences: {
+      email: boolean;
+      sms: boolean;
+    };
+  };
+  group: {
+    id: string;
+    name: string;
+    phoneNumber?: string;
+    balance: number;
+  };
+  transaction: {
+    id: string;
+    amount: number;
+    type: "credit" | "debit";
+    category: string;
+    date: Date;
+  };
 }
 
-export const sendTransactionNotification = async (data: NotificationData) => {
+// --------------------- Main Function ---------------------
+export const sendTransactionNotification = async (
+  data: NotificationData,
+): Promise<void> => {
   const { user, group, transaction } = data;
 
-  // Check notification preferences
-  if (
-    !user.notificationPreferences.email &&
-    !user.notificationPreferences.sms
-  ) {
+  // ✅ Check if notifications are enabled
+  const emailEnabled = user.notificationPreferences?.email !== false;
+  const smsEnabled = user.notificationPreferences?.sms !== false;
+
+  if (!emailEnabled && !smsEnabled) {
+    console.log(`🔕 Notifications disabled for user: ${user.email}`);
     return;
   }
 
@@ -22,14 +47,14 @@ export const sendTransactionNotification = async (data: NotificationData) => {
   const type = transaction.type;
   const typeText = type === "credit" ? "Credited" : "Debited";
 
-  // Email notification
-  if (user.notificationPreferences.email) {
+  // ✅ Send Email Notification
+  if (emailEnabled) {
     try {
       const emailHtml = getTransactionEmailTemplate({
         userName: user.name,
         groupName: group.name,
-        amount: amount,
-        type: type,
+        amount,
+        type,
         category: transaction.category,
         balance: group.balance,
         date: transaction.date,
@@ -40,26 +65,45 @@ export const sendTransactionNotification = async (data: NotificationData) => {
         `Transaction ${typeText}! - BLanc`,
         emailHtml,
       );
+
+      console.log(`✅ Email notification sent to ${user.email}`);
     } catch (error) {
-      console.error("Failed to send email notification:", error);
+      console.error(
+        `❌ Failed to send email notification to ${user.email}:`,
+        error,
+      );
     }
   }
 
-  // SMS notification
-  if (user.notificationPreferences.sms) {
+  // ✅ Send SMS Notification
+  if (smsEnabled) {
+    // ✅ Check if phone number exists
+    const phoneNumber = user.phoneNumber || group.phoneNumber;
+
+    if (!phoneNumber) {
+      console.warn(
+        `⚠️ No phone number found for user: ${user.email} or group: ${group.name}`,
+      );
+      return;
+    }
+
     try {
       const smsContent = getSmsContent({
         userName: user.name,
         groupName: group.name,
-        amount: amount,
-        type: type,
+        amount,
+        type,
         balance: group.balance,
         date: transaction.date,
       });
 
-      await sendSms(group.phoneNumber, smsContent);
+      await sendSms(phoneNumber, smsContent);
+      console.log(`✅ SMS notification sent to ${phoneNumber}`);
     } catch (error) {
-      console.error("Failed to send SMS notification:", error);
+      console.error(
+        `❌ Failed to send SMS notification to ${phoneNumber}:`,
+        error,
+      );
     }
   }
 };

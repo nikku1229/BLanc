@@ -2,8 +2,35 @@ import { Request, Response } from "express";
 import { Transaction } from "../models/Transaction.model";
 import { Group } from "../models/Group.model";
 import { User } from "../models/User.model";
-import { ApiResponse } from "../types";
 import { sendTransactionNotification } from "../utils/notifications";
+
+// --------------------- Helpers ---------------------
+const formatTransactionResponse = (transaction: any) => ({
+  id: transaction._id,
+  amount: transaction.amount,
+  type: transaction.type,
+  category: transaction.category,
+  description: transaction.description,
+  date: transaction.date,
+  notes: transaction.notes || "",
+  group: transaction.groupId
+    ? {
+        id: transaction.groupId._id || transaction.groupId,
+        name: transaction.groupId.name || "",
+      }
+    : null,
+  user: transaction.userId
+    ? {
+        id: transaction.userId._id || transaction.userId,
+        name: transaction.userId.name || "",
+        email: transaction.userId.email || "",
+      }
+    : null,
+  createdAt: transaction.createdAt,
+  updatedAt: transaction.updatedAt,
+});
+
+// --------------------- Controllers ---------------------
 
 // @desc    Create Transaction
 // @route   POST /api/transactions
@@ -17,28 +44,34 @@ export const createTransaction = async (
     const { amount, type, category, description, date, notes, groupId } =
       req.body;
 
-    // Validate group
-    const group = await Group.findOne({
-      _id: groupId,
-      createdBy: userId,
-    });
+    // Validate required fields
+    if (!amount || !type || !category || !description || !groupId) {
+      res.status(400).json({
+        success: false,
+        message:
+          "Missing required fields: amount, type, category, description, groupId",
+      });
+      return;
+    }
 
+    // Validate group ownership
+    const group = await Group.findOne({ _id: groupId, createdBy: userId });
     if (!group) {
       res.status(404).json({
         success: false,
-        message: "Group not found or unauthorized",
-      } as ApiResponse);
+        message: "Group not found or you don't have access",
+      });
       return;
     }
 
     // Create transaction
     const transaction = new Transaction({
-      amount,
+      amount: Number(amount),
       type,
       category,
-      description,
+      description: description.trim(),
       date: date || new Date(),
-      notes,
+      notes: notes?.trim() || "",
       groupId,
       userId,
     });
@@ -46,38 +79,34 @@ export const createTransaction = async (
     await transaction.save();
 
     // Update group balance
-    if (type === "credit") {
-      group.balance += amount;
-    } else {
-      group.balance -= amount;
-    }
+    const balanceChange = type === "credit" ? amount : -amount;
+    group.balance += balanceChange;
     await group.save();
 
-    // Populate references
+    // Populate for response
     await transaction.populate("groupId", "name");
     await transaction.populate("userId", "name email phoneNumber");
 
-    // Send notifications
+    // Send notifications (async, don't await to not block response)
     const user = await User.findById(userId);
     if (user) {
-      await sendTransactionNotification({
-        user,
-        group,
-        transaction,
-      });
+      sendTransactionNotification({ user, group, transaction }).catch((err) =>
+        console.error("❌ Notification error:", err),
+      );
     }
 
     res.status(201).json({
       success: true,
       message: "Transaction created successfully",
-      data: transaction,
-    } as ApiResponse);
+      data: formatTransactionResponse(transaction),
+    });
   } catch (error: any) {
+    console.error("❌ Create transaction error:", error);
     res.status(500).json({
       success: false,
-      message: "Error creating transaction",
+      message: "Failed to create transaction",
       error: error.message,
-    } as ApiResponse);
+    });
   }
 };
 
@@ -101,24 +130,20 @@ export const getTransactionsByGroup = async (
     } = req.query;
 
     // Validate group access
-    const group = await Group.findOne({
-      _id: groupId,
-      createdBy: userId,
-    });
-
+    const group = await Group.findOne({ _id: groupId, createdBy: userId });
     if (!group) {
       res.status(404).json({
         success: false,
-        message: "Group not found or unauthorized",
-      } as ApiResponse);
+        message: "Group not found or you don't have access",
+      });
       return;
     }
 
     // Build filter
     const filter: any = { groupId };
-
     if (type) filter.type = type;
     if (category) filter.category = category;
+
     if (startDate || endDate) {
       filter.date = {};
       if (startDate) filter.date.$gte = new Date(startDate as string);
@@ -126,7 +151,9 @@ export const getTransactionsByGroup = async (
     }
 
     // Pagination
-    const skip = (Number(page) - 1) * Number(limit);
+    const pageNum = Math.max(1, Number(page));
+    const limitNum = Math.min(100, Math.max(1, Number(limit)));
+    const skip = (pageNum - 1) * limitNum;
 
     const [transactions, total] = await Promise.all([
       Transaction.find(filter)
@@ -134,29 +161,33 @@ export const getTransactionsByGroup = async (
         .populate("userId", "name email")
         .sort({ date: -1 })
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(limitNum)
+        .lean(),
       Transaction.countDocuments(filter),
     ]);
+
+    const formatted = transactions.map(formatTransactionResponse);
 
     res.status(200).json({
       success: true,
       message: "Transactions fetched successfully",
       data: {
-        transactions,
+        transactions: formatted,
         pagination: {
-          page: Number(page),
-          limit: Number(limit),
+          page: pageNum,
+          limit: limitNum,
           total,
-          pages: Math.ceil(total / Number(limit)),
+          pages: Math.ceil(total / limitNum),
         },
       },
-    } as ApiResponse);
+    });
   } catch (error: any) {
+    console.error("❌ Get transactions error:", error);
     res.status(500).json({
       success: false,
-      message: "Error fetching transactions",
+      message: "Failed to fetch transactions",
       error: error.message,
-    } as ApiResponse);
+    });
   }
 };
 
@@ -171,32 +202,31 @@ export const getTransactionById = async (
     const { id } = req.params;
     const userId = req.userId;
 
-    const transaction = await Transaction.findOne({
-      _id: id,
-      userId,
-    })
+    const transaction = await Transaction.findOne({ _id: id, userId })
       .populate("groupId", "name")
-      .populate("userId", "name email");
+      .populate("userId", "name email")
+      .lean();
 
     if (!transaction) {
       res.status(404).json({
         success: false,
         message: "Transaction not found",
-      } as ApiResponse);
+      });
       return;
     }
 
     res.status(200).json({
       success: true,
       message: "Transaction fetched successfully",
-      data: transaction,
-    } as ApiResponse);
+      data: formatTransactionResponse(transaction),
+    });
   } catch (error: any) {
+    console.error("❌ Get transaction error:", error);
     res.status(500).json({
       success: false,
-      message: "Error fetching transaction",
+      message: "Failed to fetch transaction",
       error: error.message,
-    } as ApiResponse);
+    });
   }
 };
 
@@ -212,26 +242,22 @@ export const updateTransaction = async (
     const userId = req.userId;
     const updates = req.body;
 
-    const transaction = await Transaction.findOne({
-      _id: id,
-      userId,
-    });
-
+    const transaction = await Transaction.findOne({ _id: id, userId });
     if (!transaction) {
       res.status(404).json({
         success: false,
         message: "Transaction not found",
-      } as ApiResponse);
+      });
       return;
     }
 
-    // Store old amount and type for balance adjustment
+    // Store old values for balance adjustment
     const oldAmount = transaction.amount;
     const oldType = transaction.type;
     const groupId = transaction.groupId;
 
-    // Update transaction
-    const allowedUpdates = [
+    // Allowed updates
+    const allowed = [
       "amount",
       "type",
       "category",
@@ -239,30 +265,36 @@ export const updateTransaction = async (
       "date",
       "notes",
     ];
-    Object.keys(updates).forEach((key) => {
-      if (allowedUpdates.includes(key)) {
-        (transaction as any)[key] = updates[key];
+    let hasUpdates = false;
+
+    for (const key of allowed) {
+      if (updates[key] !== undefined) {
+        (transaction as any)[key] =
+          typeof updates[key] === "string" ? updates[key].trim() : updates[key];
+        hasUpdates = true;
       }
-    });
+    }
+
+    if (!hasUpdates) {
+      res.status(400).json({
+        success: false,
+        message: "No valid fields to update",
+      });
+      return;
+    }
 
     await transaction.save();
 
     // Update group balance
     const group = await Group.findById(groupId);
     if (group) {
-      // Remove old transaction effect
-      if (oldType === "credit") {
-        group.balance -= oldAmount;
-      } else {
-        group.balance += oldAmount;
-      }
-
-      // Add new transaction effect
-      if (transaction.type === "credit") {
-        group.balance += transaction.amount;
-      } else {
-        group.balance -= transaction.amount;
-      }
+      // Revert old effect
+      group.balance += oldType === "credit" ? -oldAmount : oldAmount;
+      // Apply new effect
+      group.balance +=
+        transaction.type === "credit"
+          ? transaction.amount
+          : -transaction.amount;
       await group.save();
     }
 
@@ -272,14 +304,15 @@ export const updateTransaction = async (
     res.status(200).json({
       success: true,
       message: "Transaction updated successfully",
-      data: transaction,
-    } as ApiResponse);
+      data: formatTransactionResponse(transaction),
+    });
   } catch (error: any) {
+    console.error("❌ Update transaction error:", error);
     res.status(500).json({
       success: false,
-      message: "Error updating transaction",
+      message: "Failed to update transaction",
       error: error.message,
-    } as ApiResponse);
+    });
   }
 };
 
@@ -294,27 +327,22 @@ export const deleteTransaction = async (
     const { id } = req.params;
     const userId = req.userId;
 
-    const transaction = await Transaction.findOne({
-      _id: id,
-      userId,
-    });
-
+    const transaction = await Transaction.findOne({ _id: id, userId });
     if (!transaction) {
       res.status(404).json({
         success: false,
         message: "Transaction not found",
-      } as ApiResponse);
+      });
       return;
     }
 
     // Update group balance
     const group = await Group.findById(transaction.groupId);
     if (group) {
-      if (transaction.type === "credit") {
-        group.balance -= transaction.amount;
-      } else {
-        group.balance += transaction.amount;
-      }
+      group.balance +=
+        transaction.type === "credit"
+          ? -transaction.amount
+          : transaction.amount;
       await group.save();
     }
 
@@ -323,13 +351,15 @@ export const deleteTransaction = async (
     res.status(200).json({
       success: true,
       message: "Transaction deleted successfully",
-    } as ApiResponse);
+      data: { id: transaction._id },
+    });
   } catch (error: any) {
+    console.error("❌ Delete transaction error:", error);
     res.status(500).json({
       success: false,
-      message: "Error deleting transaction",
+      message: "Failed to delete transaction",
       error: error.message,
-    } as ApiResponse);
+    });
   }
 };
 
@@ -344,16 +374,13 @@ export const getTransactionSummary = async (
     const { groupId } = req.params;
     const userId = req.userId;
 
-    const group = await Group.findOne({
-      _id: groupId,
-      members: userId,
-    });
-
+    // Validate group access
+    const group = await Group.findOne({ _id: groupId, createdBy: userId });
     if (!group) {
       res.status(404).json({
         success: false,
-        message: "Group not found or unauthorized",
-      } as ApiResponse);
+        message: "Group not found or you don't have access",
+      });
       return;
     }
 
@@ -361,33 +388,34 @@ export const getTransactionSummary = async (
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    const [totalCredit, totalDebit, categorySpending] = await Promise.all([
-      Transaction.aggregate([
-        { $match: { groupId: group._id, type: "credit" } },
-        { $group: { _id: null, total: { $sum: "$amount" } } },
-      ]),
-      Transaction.aggregate([
-        { $match: { groupId: group._id, type: "debit" } },
-        { $group: { _id: null, total: { $sum: "$amount" } } },
-      ]),
-      Transaction.aggregate([
-        { $match: { groupId: group._id, type: "debit" } },
-        { $group: { _id: "$category", total: { $sum: "$amount" } } },
-        { $sort: { total: -1 } },
-        { $limit: 5 },
-      ]),
-    ]);
-
-    const monthlySpending = await Transaction.aggregate([
-      {
-        $match: {
-          groupId: group._id,
-          date: { $gte: startOfMonth, $lte: endOfMonth },
-          type: "debit",
-        },
-      },
-      { $group: { _id: null, total: { $sum: "$amount" } } },
-    ]);
+    // Run aggregations in parallel
+    const [totalCredit, totalDebit, categorySpending, monthlySpending] =
+      await Promise.all([
+        Transaction.aggregate([
+          { $match: { groupId: group._id, type: "credit" } },
+          { $group: { _id: null, total: { $sum: "$amount" } } },
+        ]),
+        Transaction.aggregate([
+          { $match: { groupId: group._id, type: "debit" } },
+          { $group: { _id: null, total: { $sum: "$amount" } } },
+        ]),
+        Transaction.aggregate([
+          { $match: { groupId: group._id, type: "debit" } },
+          { $group: { _id: "$category", total: { $sum: "$amount" } } },
+          { $sort: { total: -1 } },
+          { $limit: 5 },
+        ]),
+        Transaction.aggregate([
+          {
+            $match: {
+              groupId: group._id,
+              date: { $gte: startOfMonth, $lte: endOfMonth },
+              type: "debit",
+            },
+          },
+          { $group: { _id: null, total: { $sum: "$amount" } } },
+        ]),
+      ]);
 
     res.status(200).json({
       success: true,
@@ -399,12 +427,13 @@ export const getTransactionSummary = async (
         monthlySpending: monthlySpending[0]?.total || 0,
         topCategories: categorySpending,
       },
-    } as ApiResponse);
+    });
   } catch (error: any) {
+    console.error("❌ Get summary error:", error);
     res.status(500).json({
       success: false,
-      message: "Error fetching summary",
+      message: "Failed to fetch summary",
       error: error.message,
-    } as ApiResponse);
+    });
   }
 };

@@ -10,12 +10,12 @@ import { authenticate } from "../middleware/auth.middleware";
 
 const router = express.Router();
 
-// Public routes
+// ==================== Public Routes ====================
 router.post("/register", register);
 router.post("/login", login);
 router.post("/refresh-token", refreshToken);
 
-// Private routes
+// ==================== Private Routes ====================
 router.get("/me", authenticate, getMe);
 router.put("/profile", authenticate, updateProfile);
 

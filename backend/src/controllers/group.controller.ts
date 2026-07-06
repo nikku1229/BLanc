@@ -1,7 +1,26 @@
 import { Request, Response } from "express";
 import { Group } from "../models/Group.model";
-import { ApiResponse } from "../types";
 import { Transaction } from "../models/Transaction.model";
+
+// --------------------- Helpers ---------------------
+const formatGroupResponse = (group: any) => ({
+  id: group._id,
+  name: group.name,
+  type: group.type,
+  description: group.description || "",
+  balance: group.balance,
+  createdBy: group.createdBy
+    ? {
+        id: group.createdBy._id,
+        name: group.createdBy.name,
+        email: group.createdBy.email,
+      }
+    : null,
+  createdAt: group.createdAt,
+  updatedAt: group.updatedAt,
+});
+
+// --------------------- Controllers ---------------------
 
 // @desc    Create Group
 // @route   POST /api/groups
@@ -14,39 +33,39 @@ export const createGroup = async (
     const userId = req.userId;
     const { name, type, description, email, phoneNumber } = req.body;
 
+    // Validate
     if (!name || name.trim().length < 2) {
       res.status(400).json({
         success: false,
-        message: "Group name is required",
-      } as ApiResponse);
+        message: "Group name is required and must be at least 2 characters",
+      });
       return;
     }
 
     const group = new Group({
-      name,
+      name: name.trim(),
       type: type || "personal",
-      description,
-      email,
-      phoneNumber,
+      description: description?.trim() || "",
+      email: email?.trim() || "",
+      phoneNumber: phoneNumber?.trim() || "",
       createdBy: userId,
     });
 
     await group.save();
-
-    // Populate creator info
     await group.populate("createdBy", "name email");
 
     res.status(201).json({
       success: true,
       message: "Group created successfully",
-      data: group,
-    } as ApiResponse);
+      data: formatGroupResponse(group),
+    });
   } catch (error: any) {
+    console.error("❌ Create group error:", error);
     res.status(500).json({
       success: false,
-      message: "Error creating group",
+      message: "Failed to create group",
       error: error.message,
-    } as ApiResponse);
+    });
   }
 };
 
@@ -57,24 +76,28 @@ export const getGroups = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.userId;
 
-    const groups = await Group.find({
-      createdBy: userId,
-    })
+    const groups = await Group.find(
+      { createdBy: userId },
+      "name type description balance createdBy createdAt updatedAt", // ✅ Select only needed fields
+    )
       .populate("createdBy", "name email")
       .sort({ createdAt: -1 })
       .lean();
 
+    const formatted = groups.map(formatGroupResponse);
+
     res.status(200).json({
       success: true,
       message: "Groups fetched successfully",
-      data: groups,
-    } as ApiResponse);
+      data: formatted,
+    });
   } catch (error: any) {
+    console.error("❌ Get groups error:", error);
     res.status(500).json({
       success: false,
-      message: "Error fetching groups",
+      message: "Failed to fetch groups",
       error: error.message,
-    } as ApiResponse);
+    });
   }
 };
 
@@ -89,30 +112,33 @@ export const getGroupById = async (
     const { id } = req.params;
     const userId = req.userId;
 
-    const group = await Group.findOne({
-      _id: id,
-      createdBy: userId,
-    }).populate("createdBy", "name email");
+    const group = await Group.findOne(
+      { _id: id, createdBy: userId },
+      "name type description email phoneNumber balance createdBy createdAt updatedAt",
+    )
+      .populate("createdBy", "name email")
+      .lean();
 
     if (!group) {
       res.status(404).json({
         success: false,
-        message: "Group not found or unauthorized",
-      } as ApiResponse);
+        message: "Group not found or you don't have access",
+      });
       return;
     }
 
     res.status(200).json({
       success: true,
       message: "Group fetched successfully",
-      data: group,
-    } as ApiResponse);
+      data: formatGroupResponse(group),
+    });
   } catch (error: any) {
+    console.error("❌ Get group by id error:", error);
     res.status(500).json({
       success: false,
-      message: "Error fetching group",
+      message: "Failed to fetch group",
       error: error.message,
-    } as ApiResponse);
+    });
   }
 };
 
@@ -128,32 +154,34 @@ export const updateGroup = async (
     const userId = req.userId;
     const updates = req.body;
 
-    const group = await Group.findOne({
-      _id: id,
-      createdBy: userId,
-    });
-
+    const group = await Group.findOne({ _id: id, createdBy: userId });
     if (!group) {
       res.status(404).json({
         success: false,
-        message: "Group not found or unauthorized",
-      } as ApiResponse);
+        message: "Group not found or you don't have access",
+      });
       return;
     }
 
-    // Allowed updates
-    const allowedUpdates = [
-      "name",
-      "type",
-      "description",
-      "email",
-      "phoneNumber",
-    ];
-    Object.keys(updates).forEach((key) => {
-      if (allowedUpdates.includes(key)) {
-        (group as any)[key] = updates[key];
+    // ✅ Allowed fields to update
+    const allowed = ["name", "type", "description", "email", "phoneNumber"];
+    let hasUpdates = false;
+
+    for (const key of allowed) {
+      if (updates[key] !== undefined) {
+        (group as any)[key] =
+          typeof updates[key] === "string" ? updates[key].trim() : updates[key];
+        hasUpdates = true;
       }
-    });
+    }
+
+    if (!hasUpdates) {
+      res.status(400).json({
+        success: false,
+        message: "No valid fields to update",
+      });
+      return;
+    }
 
     await group.save();
     await group.populate("createdBy", "name email");
@@ -161,14 +189,15 @@ export const updateGroup = async (
     res.status(200).json({
       success: true,
       message: "Group updated successfully",
-      data: group,
-    } as ApiResponse);
+      data: formatGroupResponse(group),
+    });
   } catch (error: any) {
+    console.error("❌ Update group error:", error);
     res.status(500).json({
       success: false,
-      message: "Error updating group",
+      message: "Failed to update group",
       error: error.message,
-    } as ApiResponse);
+    });
   }
 };
 
@@ -183,32 +212,30 @@ export const deleteGroup = async (
     const { id } = req.params;
     const userId = req.userId;
 
-    const group = await Group.findOne({
-      _id: id,
-      createdBy: userId,
-    });
-
+    const group = await Group.findOne({ _id: id, createdBy: userId });
     if (!group) {
       res.status(404).json({
         success: false,
-        message: "Group not found or unauthorized",
-      } as ApiResponse);
+        message: "Group not found or you don't have access",
+      });
       return;
     }
 
-    // Delete all transactions in this group
+    // ✅ Delete all associated transactions
     await Transaction.deleteMany({ groupId: id });
     await Group.findByIdAndDelete(id);
 
     res.status(200).json({
       success: true,
       message: "Group deleted successfully",
-    } as ApiResponse);
+      data: { id: group._id, name: group.name },
+    });
   } catch (error: any) {
+    console.error("❌ Delete group error:", error);
     res.status(500).json({
       success: false,
-      message: "Error deleting group",
+      message: "Failed to delete group",
       error: error.message,
-    } as ApiResponse);
+    });
   }
 };

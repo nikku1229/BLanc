@@ -4,7 +4,12 @@ export const connectDB = async (): Promise<void> => {
   try {
     const mongoURI =
       process.env.MONGODB_URI || "mongodb://localhost:27017/blanc";
-    await mongoose.connect(mongoURI);
+
+    await mongoose.connect(mongoURI, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+    });
+
     console.log("✅ MongoDB Connected Successfully");
   } catch (error) {
     console.error("❌ MongoDB Connection Error:", error);
@@ -12,11 +17,22 @@ export const connectDB = async (): Promise<void> => {
   }
 };
 
-// MongoDB connection events
 mongoose.connection.on("disconnected", () => {
   console.log("⚠️ MongoDB Disconnected");
 });
 
-mongoose.connection.on("error", (err) => {
-  console.error("❌ MongoDB Error:", err);
+// ✅ Handle graceful shutdown
+export const disconnectDB = async (): Promise<void> => {
+  await mongoose.disconnect();
+  console.log("✅ MongoDB Disconnected");
+};
+
+process.on("SIGINT", async () => {
+  await disconnectDB();
+  process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+  await disconnectDB();
+  process.exit(0);
 });

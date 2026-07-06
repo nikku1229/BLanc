@@ -27,7 +27,7 @@ const UserSchema = new Schema<IUser>(
     email: {
       type: String,
       required: [true, "Email is required"],
-      unique: true,
+      unique: true, // ✅ unique automatically creates index
       lowercase: true,
       trim: true,
       match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
@@ -36,11 +36,12 @@ const UserSchema = new Schema<IUser>(
       type: String,
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
+      select: false,
     },
     phoneNumber: {
       type: String,
       required: [true, "Phone number is required"],
-      unique: true,
+      unique: true, // ✅ unique automatically creates index
       trim: true,
       match: [/^[0-9]{10}$/, "Please enter a valid 10-digit phone number"],
     },
@@ -65,34 +66,36 @@ const UserSchema = new Schema<IUser>(
   },
   {
     timestamps: true,
+    toJSON: {
+      transform: (doc, ret) => {
+        delete ret.password;
+        delete ret.__v;
+        return ret;
+      },
+    },
   },
 );
 
+// ✅ Pre-save hook - Hash password
 UserSchema.pre("save", function () {
-  // @ts-ignore
-  if (this.isModified("password")) {
-    console.log("🔐 Hashing password...");
-    // @ts-ignore
-    const salt = bcrypt.genSaltSync(12);
-    // @ts-ignore
-    this.password = bcrypt.hashSync(this.password, salt);
+  const user = this as IUser;
+
+  if (!user.isModified("password")) {
+    return;
   }
+
+  const salt = bcrypt.genSaltSync(12);
+  user.password = bcrypt.hashSync(user.password, salt);
 });
 
+// ✅ Compare password method
 UserSchema.methods.comparePassword = async function (
   candidatePassword: string,
 ): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-UserSchema.set("toJSON", {
-  transform: (doc, ret) => {
-    // @ts-ignore
-    delete ret.password;
-    // @ts-ignore
-    delete ret.__v;
-    return ret;
-  },
-});
+// ✅ Only additional indexes (not already covered by unique)
+UserSchema.index({ createdAt: -1 });
 
 export const User = mongoose.model<IUser>("User", UserSchema);
