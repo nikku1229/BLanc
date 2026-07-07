@@ -1,73 +1,355 @@
-# React + TypeScript + Vite
+# ✨ BLanc
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern full-stack **Budget Tracking Application** built with **React + Node.js + MongoDB**, designed to help users manage budget groups, track income and expenses, monitor balances, and receive optional email and SMS notifications.
 
-Currently, two official plugins are available:
+The platform combines:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- 💰 Smart budget management
+- 👥 Multiple budget groups
+- 📊 Automatic balance tracking
+- 💳 Income & expense management
+- 📧 Email & SMS notifications
+- 🔐 Secure JWT authentication
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# 🚀 Live Demo
 
-## Expanding the ESLint configuration
+🌐 Frontend Live:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+> Coming Soon
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+# 📌 Features
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🔐 Authentication System
+
+- Secure JWT Authentication
+- User Registration & Login
+- Access & Refresh Tokens
+- Protected Routes
+- User Profile Management
+- Notification Preferences
+
+---
+
+## 👥 Budget Groups
+
+- Create Personal, Family, Friends or Custom Groups
+- Manage Multiple Budget Groups
+- Store Optional Contact Details
+- Edit & Delete Groups
+
+---
+
+## 💳 Transaction Management
+
+- Add Income & Expense Transactions
+- Update Existing Transactions
+- Delete Transactions
+- View Transaction History
+- Pagination & Filtering Support
+
+---
+
+## 📊 Automatic Balance Tracking
+
+- Live Group Balance Updates
+- Income & Expense Summary
+- Category-wise Summary
+- Financial Overview Dashboard
+
+---
+
+## 🏷️ Categories
+
+### Income
+
+- Salary
+- Bonus
+- Investment
+- Gift
+- Other Income
+
+### Expense
+
+- Food
+- Shopping
+- Bills
+- Travel
+- Entertainment
+- Medical
+- Rent
+- Utilities
+- Insurance
+- Education
+- Other Expense
+
+---
+
+## 📧 Notifications
+
+- Email Notifications using Nodemailer
+- SMS Notifications using HTTP SMS
+- User Controlled Notification Preferences
+
+---
+
+# 🛠️ Tech Stack
+
+## Frontend
+
+- React 19
+- TypeScript
+- Vite
+- React Router
+- Zustand
+- Axios
+- React Hook Form
+
+## Backend
+
+- Node.js
+- Express 5
+- TypeScript
+- Mongoose
+- JWT Authentication
+- Nodemailer
+- HTTP SMS API
+
+## Database
+
+- MongoDB
+- Atlas
+
+---
+
+# 📂 Project Structure
+
+```text
+BLanc/
+├── backend/
+│   └── src/
+│       ├── config/
+│       ├── controllers/
+│       ├── middleware/
+│       ├── models/
+│       ├── routes/
+│       ├── utils/
+│       └── index.ts
+├── frontend/
+│   └── src/
+│       ├── api/
+│       ├── components/
+│       ├── pages/
+│       ├── store/
+│       ├── styles/
+│       └── types/
+└── package.json
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+# ⚙️ Prerequisites
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Node.js v18+
+- MongoDB
+- npm
+- Email credentials (Optional)
+- HTTP SMS API Key (Optional)
+
+---
+
+# 📥 Installation & Setup
+
+## Clone Repository
+
+```bash
+git clone https://github.com/nikku1229/BLanc.git
+cd BLanc
+npm run install:all
 ```
+
+## Backend Setup
+
+```bash
+cp backend/.env.example backend/.env
+npm run dev:backend
+```
+
+Required environment variables:
+
+PORT, MONGODB_URI, JWT_SECRET, JWT_EXPIRES_IN, JWT_REFRESH_SECRET, JWT_REFRESH_EXPIRES_IN, EMAIL_SERVICE, EMAIL_USER, EMAIL_PASSWORD, HTTPSMS_API_KEY, HTTPSMS_FROM_NUMBER, FRONTEND_URL
+
+Backend runs on:
+
+```text
+http://localhost:5000
+```
+
+---
+
+## Frontend Setup
+
+```bash
+cp frontend/.env.example frontend/.env
+npm run dev:frontend
+```
+
+Frontend environment:
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+Frontend runs on:
+
+```text
+http://localhost:5173
+```
+
+---
+
+# 🔌 API Overview
+
+Base URL:
+
+```text
+http://localhost:5000/api
+```
+
+## Health
+
+| Method | Endpoint | Description  |
+| ------ | -------- | ------------ |
+| GET    | /health  | Health Check |
+
+## 🔐 Authentication Routes
+
+| Method | Endpoint            |
+| ------ | ------------------- |
+| POST   | /auth/register      |
+| POST   | /auth/login         |
+| POST   | /auth/refresh-token |
+| GET    | /auth/me            |
+| PUT    | /auth/profile       |
+
+## 👥 Group Routes
+
+| Method | Endpoint    |
+| ------ | ----------- |
+| GET    | /groups     |
+| POST   | /groups     |
+| GET    | /groups/:id |
+| PUT    | /groups/:id |
+| DELETE | /groups/:id |
+
+## 💳 Transaction Routes
+
+| Method | Endpoint                       |
+| ------ | ------------------------------ |
+| POST   | /transactions                  |
+| GET    | /transactions/group/:groupId   |
+| GET    | /transactions/summary/:groupId |
+| GET    | /transactions/:id              |
+| PUT    | /transactions/:id              |
+| DELETE | /transactions/:id              |
+
+---
+
+# 📊 Dashboard Features
+
+- Total Balance Overview
+- Budget Group Count
+- Quick Access to Groups
+- Financial Summary
+- Category Breakdown
+
+---
+
+# 🔐 Security Features
+
+- JWT Authentication
+- Refresh Tokens
+- bcrypt Password Hashing
+- Helmet Security
+- CORS Protection
+- Rate Limiting
+- Protected Routes
+
+---
+
+# 📈 Performance & UX
+
+- Fast React + Vite
+- Responsive UI
+- Efficient State Management
+- Optimized API Requests
+
+---
+
+# 🚀 Future Improvements
+
+- Charts & Analytics
+- Budget Goals
+- Recurring Transactions
+- Export Reports
+- Multi-Currency Support
+- Dark Mode Enhancements
+- PWA Support
+
+---
+
+# 🌐 Deployment
+
+## Frontend
+
+- Vercel
+- Netlify
+
+## Backend
+
+- Render
+
+## Database
+
+- MongoDB Atlas
+
+---
+
+# 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch
+3. Commit your changes
+4. Push to your branch
+5. Open a Pull Request
+
+---
+
+# 👨‍💻 Author
+
+## Nitesh Sharma
+
+- GitHub: https://github.com/nikku1229
+
+- LinkedIn: https://www.linkedin.com/in/nitish-sharma-648a581b2/
+
+---
+
+# ⭐ Support
+
+If you like this project:
+
+⭐ Star the repository
+
+🔁 Share the project
+
+🤝 Contribute to development
+
+---
+
+# 💰 Built for Smart & Modern Budget Management
+
+BLanc combines secure authentication, efficient budget tracking, automatic balance calculations, and modern technologies to deliver a simple, reliable, and user-friendly personal finance management experience.
