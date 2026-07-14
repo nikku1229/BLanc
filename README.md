@@ -297,7 +297,6 @@ http://localhost:5000/api
 - Export Reports
 - Multi-Currency Support
 - Dark Mode Enhancements
-- PWA Support
 
 ---
 
