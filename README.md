@@ -17,7 +17,7 @@ The platform combines:
 
 🌐 Frontend Live:
 
-> Coming Soon
+> https://b-lanc.vercel.app/
 
 ---
 
