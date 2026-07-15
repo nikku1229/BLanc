@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 // ==================== Register Component ====================
 
@@ -196,7 +197,15 @@ const Register: React.FC = () => {
                 onClick={togglePasswordVisibility}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? "🙈" : "👁️"}
+                {showPassword ? (
+                  <>
+                    <FiEyeOff className="icon-light" />
+                  </>
+                ) : (
+                  <>
+                    <FiEye className="icon-light" />
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -224,7 +233,15 @@ const Register: React.FC = () => {
                   showConfirmPassword ? "Hide password" : "Show password"
                 }
               >
-                {showConfirmPassword ? "🙈" : "👁️"}
+                {showConfirmPassword ? (
+                  <>
+                    <FiEyeOff className="icon-light" />
+                  </>
+                ) : (
+                  <>
+                    <FiEye className="icon-light" />
+                  </>
+                )}
               </button>
             </div>
           </div>

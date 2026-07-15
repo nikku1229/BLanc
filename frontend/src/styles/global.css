@@ -112,6 +112,15 @@ textarea.error {
   }
 }
 
+.icon-light {
+  color: var(--white);
+  font-size: 18px;
+}
+
+.icon-dark {
+  color: var(--primary-color);
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .grid-4 {

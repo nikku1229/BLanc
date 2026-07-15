@@ -3,7 +3,8 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 // ==================== Configuration ====================
 
 // ✅ API_URL - Remove duplicate /api
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL =
+  `${import.meta.env.VITE_API_URL}/api` || "http://localhost:5000/api";
 
 // ✅ Create axios instance with default config
 const api = axios.create({
@@ -26,14 +27,6 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // ✅ Log request in development
-    if (import.meta.env.DEV) {
-      console.log(
-        `📤 ${config.method?.toUpperCase()} ${config.url}`,
-        config.data || "",
-      );
-    }
-
     return config;
   },
   (error: AxiosError) => {
@@ -46,13 +39,6 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    // ✅ Log response in development
-    if (import.meta.env.DEV) {
-      console.log(
-        `📥 ${response.config.method?.toUpperCase()} ${response.config.url}`,
-        response.data,
-      );
-    }
     return response;
   },
   async (error: AxiosError) => {

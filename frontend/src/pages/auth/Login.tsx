@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 // ==================== Login Component ====================
 
@@ -128,7 +129,15 @@ const Login: React.FC = () => {
                 onClick={togglePasswordVisibility}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? "🙈" : "👁️"}
+                {showPassword ? (
+                  <>
+                    <FiEyeOff className="icon-light" />
+                  </>
+                ) : (
+                  <>
+                    <FiEye className="icon-light" />
+                  </>
+                )}
               </button>
             </div>
             <p className="forgot-password">

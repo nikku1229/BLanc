@@ -9,6 +9,7 @@ import { useAuthStore } from "./store/authStore";
 import ProtectedRoute from "./components/protectedRoute/ProtectedRoute";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 import Dashboard from "./pages/dashboard/Dashboard";
 import TransactionPage from "./pages/dashboard/TransactionPage";
 import ErrorPage from "./pages/common/ErrorPage";
@@ -32,6 +33,16 @@ const App: React.FC = () => {
               <Navigate to="/dashboard" replace />
             ) : (
               <Register />
+            )
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <ForgotPassword />
             )
           }
         />

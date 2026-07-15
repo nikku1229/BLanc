@@ -1,6 +1,12 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { User } from "../models/User.model";
+import {
+  sendEmail,
+  getOTPEmailTemplate,
+  getPasswordResetSuccessTemplate,
+} from "../config/email";
 
 // --------------------- Helpers ---------------------
 const generateToken = (userId: string): string => {
@@ -263,6 +269,233 @@ export const updateProfile = async (
     res.status(500).json({
       success: false,
       message: "Failed to update profile",
+      error: error.message,
+    });
+  }
+};
+
+// ==================== Forget Password Functions ====================
+
+// @desc    Request OTP for Password Reset
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+      return;
+    }
+
+    // ✅ Find user
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found with this email",
+      });
+      return;
+    }
+
+    // ✅ Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiryMinutes = 15;
+    const expiryDate = new Date(Date.now() + expiryMinutes * 60 * 1000);
+
+    // ✅ Save OTP to user
+    user.resetOTP = otp;
+    user.resetOTPExpiry = expiryDate;
+    await user.save();
+
+    // ✅ Send OTP via email
+    const emailHtml = getOTPEmailTemplate({
+      name: user.name,
+      otp: otp,
+      expiryMinutes: expiryMinutes,
+    });
+
+    await sendEmail(user.email, "Reset Your Password - BLanc", emailHtml);
+
+    res.status(200).json({
+      success: true,
+      message: `OTP sent to ${user.email}. Valid for ${expiryMinutes} minutes.`,
+    });
+  } catch (error: any) {
+    console.error("❌ Forgot password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send OTP",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Verify OTP and Reset Password
+// @route   POST /api/auth/reset-password
+// @access  Public
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    // ✅ Validate input
+    if (!email || !otp || !newPassword) {
+      res.status(400).json({
+        success: false,
+        message: "Email, OTP, and new password are required",
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+      return;
+    }
+
+    // ✅ Find user
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+    }).select("+resetOTP +resetOTPExpiry");
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    // ✅ Check if OTP exists
+    if (!user.resetOTP || !user.resetOTPExpiry) {
+      res.status(400).json({
+        success: false,
+        message: "No OTP request found. Please request a new OTP.",
+      });
+      return;
+    }
+
+    // ✅ Check if OTP is expired
+    if (new Date() > user.resetOTPExpiry) {
+      res.status(400).json({
+        success: false,
+        message: "OTP has expired. Please request a new OTP.",
+      });
+      return;
+    }
+
+    // ✅ Verify OTP
+    if (user.resetOTP !== otp) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid OTP. Please try again.",
+      });
+      return;
+    }
+
+    // ✅ Update password
+    user.password = newPassword;
+    user.resetOTP = undefined;
+    user.resetOTPExpiry = undefined;
+    await user.save();
+
+    // ✅ Send success email
+    const successHtml = getPasswordResetSuccessTemplate({
+      name: user.name,
+    });
+
+    await sendEmail(
+      user.email,
+      "Password Reset Successful - BLanc",
+      successHtml,
+    );
+
+    res.status(200).json({
+      success: true,
+      message:
+        "Password reset successfully. You can now login with your new password.",
+    });
+  } catch (error: any) {
+    console.error("❌ Reset password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to reset password",
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Verify OTP only (without resetting password)
+// @route   POST /api/auth/verify-otp
+// @access  Public
+export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      res.status(400).json({
+        success: false,
+        message: "Email and OTP are required",
+      });
+      return;
+    }
+
+    const user = await User.findOne({
+      email: email.toLowerCase().trim(),
+    }).select("+resetOTP +resetOTPExpiry");
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+      return;
+    }
+
+    if (!user.resetOTP || !user.resetOTPExpiry) {
+      res.status(400).json({
+        success: false,
+        message: "No OTP request found",
+      });
+      return;
+    }
+
+    if (new Date() > user.resetOTPExpiry) {
+      res.status(400).json({
+        success: false,
+        message: "OTP has expired",
+      });
+      return;
+    }
+
+    if (user.resetOTP !== otp) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+    });
+  } catch (error: any) {
+    console.error("❌ Verify OTP error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to verify OTP",
       error: error.message,
     });
   }
