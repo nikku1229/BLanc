@@ -1,14 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Activity } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import { useGroupStore } from "../../store/groupStore";
 import GroupCard from "../../components/groups/GroupCard";
+import EditGroupModal from "../../components/groups/EditGroupModal";
 import ErrorPage from "../common/ErrorPage";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
-
-// ==================== Types ====================
-
-type GroupType = "personal" | "family" | "friends" | "custom";
+import type { Group, GroupType } from "../../types";
+import { formatBalance, isNegative } from "../../utils/formatAmount";
 
 // ==================== Dashboard Component ====================
 
@@ -18,6 +17,8 @@ const Dashboard: React.FC = () => {
   const { groups, fetchGroups, loading, error, clearError } = useGroupStore();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
 
   // ✅ Check authentication and fetch groups
   useEffect(() => {
@@ -52,6 +53,17 @@ const Dashboard: React.FC = () => {
   const handleLogout = () => {
     logout();
     navigate("/login", { replace: true });
+  };
+
+  // ✅ Handle Edit Group
+  const handleEditGroup = (group: Group) => {
+    setEditingGroup(group);
+    setShowEditModal(true);
+  };
+
+  // ✅ Handle Edit Success
+  const handleEditSuccess = () => {
+    fetchGroups();
   };
 
   const handleCreateGroup = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -112,7 +124,7 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div className="user-info">
-          <h1>Welcome back, {user?.name}! 👋</h1>
+          <h1>Welcome back, {user?.name}!</h1>
           <p>Here's your financial overview</p>
         </div>
         <div className="header-btns">
@@ -132,19 +144,15 @@ const Dashboard: React.FC = () => {
       <div className="dashboard-stats">
         <div className="stat-card">
           <div className="stat-label">Total Balance</div>
-          <div className="stat-value positive">₹{totalBalance.toFixed(2)}</div>
+          <div
+            className={`stat-value ${isNegative(Number(totalBalance)) ? "negative" : "positive"}`}
+          >
+            {formatBalance(Number(totalBalance.toFixed(2)))}
+          </div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Total Groups</div>
           <div className="stat-value">{totalGroups}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Monthly Income</div>
-          <div className="stat-value positive">₹0.00</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Monthly Expenses</div>
-          <div className="stat-value negative">₹0.00</div>
         </div>
       </div>
 
@@ -152,7 +160,7 @@ const Dashboard: React.FC = () => {
       <div className="dashboard-content">
         <div className="card">
           <h3>Your Groups</h3>
-          {groups.length === 0 ? (
+          {groups.length == 0 ? (
             <div className="empty-state">
               <p>You haven't created any groups yet.</p>
               <button
@@ -178,9 +186,7 @@ const Dashboard: React.FC = () => {
                       fetchGroups();
                     }
                   }}
-                  onEdit={() => {
-                    alert("Edit functionality coming soon!");
-                  }}
+                  onEdit={handleEditGroup}
                 />
               ))}
             </div>
@@ -188,13 +194,26 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Edit Group Modal */}
+      {showEditModal && editingGroup && (
+        <EditGroupModal
+          group={editingGroup}
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingGroup(null);
+          }}
+          onSuccess={handleEditSuccess}
+        />
+      )}
+
       {/* Create Group Modal */}
-      {showCreateModal && (
+      <Activity mode={showCreateModal ? "visible" : "hidden"}>
         <div
-          className="modal-overlay"
+          className="modal-container"
           onClick={() => setShowCreateModal(false)}
         >
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="group-form" onClick={(e) => e.stopPropagation()}>
             <h2>Create New Group</h2>
             <form onSubmit={handleCreateGroup}>
               {/* Group Name */}
@@ -275,7 +294,7 @@ const Dashboard: React.FC = () => {
             </form>
           </div>
         </div>
-      )}
+      </Activity>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import type { Group } from "../../types";
+import { formatBalance, isNegative } from "../../utils/formatAmount";
 
 interface GroupCardProps {
   group: Group;
@@ -31,7 +32,11 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onDelete, onEdit }) => {
       {group.description && (
         <div className="group-description">{group.description}</div>
       )}
-      <div className="group-balance">₹{(group.balance || 0).toFixed(2)}</div>
+      <div
+        className={`group-balance ${isNegative(Number(group.balance)) ? "negative" : "positive"}`}
+      >
+        {formatBalance(Number(group.balance.toFixed(2)))}
+      </div>
 
       <div className="group-actions" onClick={(e) => e.stopPropagation()}>
         <button
@@ -42,11 +47,7 @@ const GroupCard: React.FC<GroupCardProps> = ({ group, onDelete, onEdit }) => {
         </button>
         <button
           className="btn btn-danger btn-sm"
-          onClick={() => {
-            if (window.confirm("Are you sure you want to delete this group?")) {
-              onDelete(group.id);
-            }
-          }}
+          onClick={() => onDelete(group.id)}
         >
           Delete
         </button>

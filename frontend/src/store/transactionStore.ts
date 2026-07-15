@@ -52,13 +52,18 @@ const formatTransactions = (data: any[]): Transaction[] => {
 
 // ==================== Transaction Store ====================
 
-export const useTransactionStore = create<TransactionState>((set) => ({
+export const useTransactionStore = create<TransactionState>((set, get) => ({
   transactions: [],
   loading: false,
   error: null,
   totalPages: 1,
   totalTransactions: 0,
   currentPage: 1,
+
+  // ✅ New: Total stats for the group
+  totalIncome: 0,
+  totalExpenses: 0,
+  totalCount: 0,
 
   // ✅ Fetch transactions by group with pagination
   fetchTransactionsByGroup: async (
@@ -85,6 +90,8 @@ export const useTransactionStore = create<TransactionState>((set) => ({
         totalTransactions: data?.pagination?.total || 0,
         currentPage: data?.pagination?.page || page,
       });
+
+      await get().fetchTotalStats(groupId);
     } catch (error: any) {
       console.error("❌ Fetch transactions error:", error);
       const errorMessage = getErrorMessage(
@@ -92,6 +99,25 @@ export const useTransactionStore = create<TransactionState>((set) => ({
         "Failed to fetch transactions",
       );
       set({ error: errorMessage, loading: false, transactions: [] });
+    }
+  },
+
+  // ✅ NEW: Fetch total stats for the group (all transactions)
+  fetchTotalStats: async (groupId: string) => {
+    try {
+      const response = await api.get<ApiResponse<any>>(
+        `/transactions/summary/${groupId}`,
+      );
+      const data = response.data.data;
+
+      set({
+        totalIncome: data?.totalCredit || 0,
+        totalExpenses: data?.totalDebit || 0,
+        totalCount: data?.totalTransactions || 0,
+      });
+    } catch (error) {
+      console.error("❌ Fetch total stats error:", error);
+      // Don't set error state, just log
     }
   },
 

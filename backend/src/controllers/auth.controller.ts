@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import crypto from "crypto";
 import { User } from "../models/User.model";
 import {
   sendEmail,

@@ -6,6 +6,9 @@ import TransactionList from "../../components/transactions/TransactionList";
 import TransactionForm from "../../components/transactions/TransactionForm";
 import ErrorPage from "../common/ErrorPage";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import { isNegative, formatBalance } from "../../utils/formatAmount";
+import EditTransactionModal from "../../components/transactions/EditTransactionModal";
+import type { Transaction } from "../../types";
 
 // ==================== TransactionPage Component ====================
 
@@ -16,23 +19,31 @@ const TransactionPage: React.FC = () => {
   // ✅ Pagination state
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalTransactions, setTotalTransactions] = useState(0);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTransaction, setEditingTransaction] =
+    useState<Transaction | null>(null);
+  const [showAddTransaction, setShowAddTransaction] = useState(false);
 
   const {
     currentGroup,
     fetchGroupById,
     loading: groupLoading,
   } = useGroupStore();
+
   const {
     transactions,
     fetchTransactionsByGroup,
     deleteTransaction,
     loading: transLoading,
     clearError,
+    totalPages,
+    totalTransactions,
+    currentPage,
+    totalIncome,
+    totalExpenses,
+    totalCount,
   } = useTransactionStore();
-
-  const [showAddTransaction, setShowAddTransaction] = useState(false);
 
   // ✅ Fetch data on mount or page change
   useEffect(() => {
@@ -46,28 +57,6 @@ const TransactionPage: React.FC = () => {
   useEffect(() => {
     return () => clearError();
   }, []);
-
-  // ✅ Calculate totals
-  const totalIncome = transactions
-    .filter((t) => t.type === "credit")
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const totalExpenses = transactions
-    .filter((t) => t.type === "debit")
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  // ✅ Check if balance is negative
-  const isNegative = (amount: number): boolean => {
-    return amount < 0;
-  };
-
-  // ✅ Format balance display
-  const formatBalance = (balance: number): string => {
-    if (isNegative(balance)) {
-      return `-₹${Math.abs(balance).toFixed(2)}`;
-    }
-    return `₹${balance.toFixed(2)}`;
-  };
 
   // ✅ Handle page change
   const handlePageChange = (newPage: number) => {
@@ -88,6 +77,20 @@ const TransactionPage: React.FC = () => {
       } catch (error) {
         console.error("❌ Delete transaction error:", error);
       }
+    }
+  };
+
+  // ✅ Handle edit transaction
+  const handleEditTransaction = (transaction: Transaction) => {
+    setEditingTransaction(transaction);
+    setShowEditModal(true);
+  };
+
+  // ✅ Handle edit success
+  const handleEditSuccess = () => {
+    if (id) {
+      fetchGroupById(id);
+      fetchTransactionsByGroup(id, page, limit);
     }
   };
 
@@ -118,7 +121,7 @@ const TransactionPage: React.FC = () => {
     pages.push(
       <button
         key="prev"
-        className="btn btn-secondary btn-sm"
+        className="btn primary-btn"
         onClick={() => handlePageChange(page - 1)}
         disabled={page === 1}
       >
@@ -131,7 +134,7 @@ const TransactionPage: React.FC = () => {
       pages.push(
         <button
           key={1}
-          className="btn btn-secondary btn-sm"
+          className="btn btn-primary"
           onClick={() => handlePageChange(1)}
         >
           1
@@ -237,7 +240,7 @@ const TransactionPage: React.FC = () => {
         </div>
         <div className="stat-card">
           <p className="stat-label">Total Transactions</p>
-          <h2 className="stat-value">{totalTransactions}</h2>
+          <h2 className="stat-value">{totalCount}</h2>
         </div>
       </div>
 
@@ -270,23 +273,35 @@ const TransactionPage: React.FC = () => {
           <>
             <TransactionList
               transactions={transactions}
-              onEdit={() => {
-                alert("Edit functionality coming soon!");
-              }}
+              onEdit={handleEditTransaction}
               onDelete={handleDeleteTransaction}
             />
 
-            {/* ✅ Pagination */}
-            <div className="pagination-container">
-              <div className="pagination-info">
-                Showing page {page} of {totalPages} ({totalTransactions}{" "}
-                transactions)
+            {transactions.length && (
+              <div className="pagination-container">
+                <div className="pagination-info">
+                  Showing {transactions.length} of {totalTransactions}{" "}
+                  transactions (Page {currentPage} of {totalPages})
+                </div>
+                {renderPagination()}
               </div>
-              {renderPagination()}
-            </div>
+            )}
           </>
         )}
       </div>
+
+      {/* ✅ Edit Transaction Modal */}
+      {showEditModal && editingTransaction && (
+        <EditTransactionModal
+          transaction={editingTransaction}
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingTransaction(null);
+          }}
+          onSuccess={handleEditSuccess}
+        />
+      )}
 
       {/* Add Transaction Modal */}
       {showAddTransaction && (

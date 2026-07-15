@@ -121,6 +121,14 @@ textarea.error {
   color: var(--primary-color);
 }
 
+.negative {
+  color: var(--red);
+}
+
+.positive {
+  color: var(--secondary-color);
+}
+
 /* Responsive */
 @media (max-width: 1024px) {
   .grid-4 {
