@@ -388,6 +388,8 @@ export const getTransactionSummary = async (
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
+    const totalCount = await Transaction.countDocuments({ groupId: group._id });
+
     // Run aggregations in parallel
     const [totalCredit, totalDebit, categorySpending, monthlySpending] =
       await Promise.all([
@@ -426,6 +428,7 @@ export const getTransactionSummary = async (
         balance: group.balance,
         monthlySpending: monthlySpending[0]?.total || 0,
         topCategories: categorySpending,
+        totalTransactions: totalCount,
       },
     });
   } catch (error: any) {

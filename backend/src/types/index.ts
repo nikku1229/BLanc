@@ -14,6 +14,21 @@ export interface IUser {
   updatedAt: Date;
 }
 
+export interface ForgotPasswordData {
+  email: string;
+}
+
+export interface VerifyOTPData {
+  email: string;
+  otp: string;
+}
+
+export interface ResetPasswordData {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
+
 // ✅ Password removed from IUser (never send password in responses)
 // ✅ _id is required (not optional)
 

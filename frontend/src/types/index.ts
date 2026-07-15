@@ -130,11 +130,15 @@ export interface TransactionState {
   totalPages: number;
   totalTransactions: number;
   currentPage: number;
+  totalIncome: number;
+  totalExpenses: number;
+  totalCount: number;
   fetchTransactionsByGroup: (
     groupId: string,
     page?: number,
     limit?: number,
   ) => Promise<void>;
+  fetchTotalStats: (groupId: string) => Promise<void>;
   createTransaction: (data: CreateTransactionData) => Promise<void>;
   updateTransaction: (id: string, data: Partial<Transaction>) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;

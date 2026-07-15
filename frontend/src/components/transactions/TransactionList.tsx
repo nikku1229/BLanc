@@ -9,27 +9,6 @@ interface TransactionListProps {
   onDelete?: (id: string) => void;
 }
 
-// ==================== Constants ====================
-
-const CATEGORY_COLORS: Record<string, string> = {
-  Salary: "category-salary",
-  Bonus: "category-bonus",
-  Investment: "category-investment",
-  Gift: "category-gift",
-  "Other Income": "category-other-income",
-  Food: "category-food",
-  Shopping: "category-shopping",
-  Bills: "category-bills",
-  Travel: "category-travel",
-  Entertainment: "category-entertainment",
-  Medical: "category-medical",
-  Rent: "category-rent",
-  Utilities: "category-utilities",
-  Insurance: "category-insurance",
-  Education: "category-education",
-  "Other Expense": "category-other-expense",
-};
-
 // ==================== TransactionList Component ====================
 
 const TransactionList: React.FC<TransactionListProps> = ({
@@ -61,11 +40,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
 
     return filtered;
   }, [transactions, filter, sortBy, sortOrder]);
-
-  // ✅ Get category color class
-  const getCategoryColor = (category: string): string => {
-    return CATEGORY_COLORS[category] || "category-default";
-  };
 
   // ✅ Format date
   const formatDate = (dateStr: string): string => {
@@ -107,19 +81,19 @@ const TransactionList: React.FC<TransactionListProps> = ({
         <div className="transaction-filter-btns">
           <button
             onClick={() => setFilter("all")}
-            className={`btn ${filter === "all" ? "btn-primary" : "btn-secondary"} btn-sm`}
+            className={`btn ${filter === "all" ? "active" : ""}`}
           >
             All ({transactions.length})
           </button>
           <button
             onClick={() => setFilter("credit")}
-            className={`btn ${filter === "credit" ? "btn-success" : "btn-secondary"} btn-sm`}
+            className={`btn ${filter === "credit" ? "active" : ""} `}
           >
             Income ({incomeCount})
           </button>
           <button
             onClick={() => setFilter("debit")}
-            className={`btn ${filter === "debit" ? "btn-danger" : "btn-secondary"} btn-sm`}
+            className={`btn ${filter === "debit" ? "active" : ""} `}
           >
             Expense ({expenseCount})
           </button>
@@ -148,64 +122,42 @@ const TransactionList: React.FC<TransactionListProps> = ({
           <div key={transaction.id} className="transaction-history-card">
             <div className="transaction-details">
               {/* Category Badge */}
-              <div className="category-badges">
-                <span
-                  className={`category-badge ${getCategoryColor(transaction.category)}`}
-                >
-                  {transaction.category}
-                </span>
+              <div className="category">
+                <span>{transaction.category}</span>
                 <span
                   className={`transaction-type ${transaction.type === "credit" ? "income" : "expense"}`}
                 >
-                  {transaction.type === "credit" ? "💰 Income" : "💳 Expense"}
+                  {transaction.type === "credit" ? "Income" : "Expense"}
                 </span>
               </div>
 
               {/* Description */}
-              <p className="transaction-description">
-                {transaction.description}
-              </p>
+              <p>{transaction.description}</p>
 
               {/* Notes */}
-              {transaction.notes && (
-                <p className="transaction-notes">{transaction.notes}</p>
-              )}
+              {transaction.notes && <p>{transaction.notes}</p>}
 
               {/* Date */}
-              <p className="transaction-date">{formatDate(transaction.date)}</p>
+              <p className="time">{formatDate(transaction.date)}</p>
             </div>
 
-            <div className="transaction-amount-wrapper">
+            <div className="transaction-amount">
               {/* Amount */}
-              <p
-                className={`transaction-amount ${transaction.type === "credit" ? "credit" : "debit"}`}
-              >
+              <p>
                 {transaction.type === "credit" ? "+" : "-"}₹
                 {transaction.amount.toFixed(2)}
               </p>
 
               {/* Action Buttons */}
               {onEdit && onDelete && (
-                <div className="transaction-actions">
+                <div className="transaction-btns">
+                  <button onClick={() => onEdit(transaction)}>Edit</button>
                   <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => onEdit(transaction)}
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
                     onClick={() => {
-                      if (
-                        window.confirm(
-                          "Are you sure you want to delete this transaction?",
-                        )
-                      ) {
-                        onDelete(transaction.id);
-                      }
+                      onDelete(transaction.id);
                     }}
                   >
-                    🗑️ Delete
+                    Delete
                   </button>
                 </div>
               )}

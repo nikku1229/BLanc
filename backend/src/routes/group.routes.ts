@@ -22,7 +22,7 @@ router
 router
   .route("/:id")
   .get(getGroupById) // GET /api/groups/:id - Get single group
-  .put(updateGroup) // PUT /api/groups/:id - Update group
+  .patch(updateGroup) // PATCH /api/groups/:id - Update group
   .delete(deleteGroup); // DELETE /api/groups/:id - Delete group
 
 export default router;

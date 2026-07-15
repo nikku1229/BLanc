@@ -65,8 +65,6 @@ export const sendTransactionNotification = async (
         `Transaction ${typeText}! - BLanc`,
         emailHtml,
       );
-
-      console.log(`✅ Email notification sent to ${user.email}`);
     } catch (error) {
       console.error(
         `❌ Failed to send email notification to ${user.email}:`,
@@ -98,7 +96,6 @@ export const sendTransactionNotification = async (
       });
 
       await sendSms(phoneNumber, smsContent);
-      console.log(`✅ SMS notification sent to ${phoneNumber}`);
     } catch (error) {
       console.error(
         `❌ Failed to send SMS notification to ${phoneNumber}:`,

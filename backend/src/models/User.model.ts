@@ -12,6 +12,8 @@ export interface IUser extends Document {
     email: boolean;
     sms: boolean;
   };
+  resetOTP?: string;
+  resetOTPExpiry?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -63,6 +65,14 @@ const UserSchema = new Schema<IUser>(
         default: true,
       },
     },
+    resetOTP: {
+      type: String,
+      select: false,
+    },
+    resetOTPExpiry: {
+      type: Date,
+      select: false,
+    },
   },
   {
     timestamps: true,
@@ -70,6 +80,8 @@ const UserSchema = new Schema<IUser>(
       transform: (doc, ret) => {
         delete ret.password;
         delete ret.__v;
+        delete ret.resetOTP;
+        delete ret.resetOTPExpiry;
         return ret;
       },
     },

@@ -117,7 +117,7 @@ export const useGroupStore = create<GroupState>((set) => ({
   updateGroup: async (id: string, groupData: Partial<Group>) => {
     set({ loading: true, error: null });
     try {
-      const response = await api.put<ApiResponse<any>>(
+      const response = await api.patch<ApiResponse<any>>(
         `/groups/${id}`,
         groupData,
       );
