@@ -1,11 +1,11 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { User } from "../models/User.model";
+import { User } from "../models/User.model.ts";
 import {
   sendEmail,
   getOTPEmailTemplate,
   getPasswordResetSuccessTemplate,
-} from "../config/email";
+} from "../config/email.ts";
 
 // --------------------- Helpers ---------------------
 const generateToken = (userId: string): string => {

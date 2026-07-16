@@ -1,5 +1,5 @@
-import { sendEmail, getTransactionEmailTemplate } from "../config/email";
-import { sendSms, getSmsContent } from "../config/sms";
+import { sendEmail, getTransactionEmailTemplate } from "../config/email.ts";
+import { sendSms, getSmsContent } from "../config/sms.ts";
 
 // --------------------- Types ---------------------
 interface NotificationData {

@@ -1,18 +1,21 @@
 import express from "express";
 import helmet from "helmet";
 import dotenv from "dotenv";
-import { connectDB, disconnectDB } from "./config/database";
-import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
+import { connectDB, disconnectDB } from "./config/database.ts";
+import {
+  errorHandler,
+  notFoundHandler,
+} from "./middleware/error.middleware.ts";
 import {
   globalLimiter,
   authLimiter,
   createLimiter,
-} from "./middleware/ratelimiter";
-import { corsMiddleware } from "./middleware/cors";
-import authRoutes from "./routes/auth.routes";
-import groupRoutes from "./routes/group.routes";
-import transactionRoutes from "./routes/transaction.routes";
-import { verifyEmailTransporter } from "./config/email";
+} from "./middleware/ratelimiter.ts";
+import { corsMiddleware } from "./middleware/cors.ts";
+import authRoutes from "./routes/auth.routes.ts";
+import groupRoutes from "./routes/group.routes.ts";
+import transactionRoutes from "./routes/transaction.routes.ts";
+import { verifyEmailTransporter } from "./config/email.ts";
 
 // --------------------- Load Environment Variables ---------------------
 dotenv.config();

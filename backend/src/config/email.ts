@@ -1,13 +1,13 @@
-import nodemailer, { Transporter } from "nodemailer";
+import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 // ✅ Singleton transporter - ek baar create, baar baar use
-let transporter: Transporter | null = null;
+// let transporter: Transporter | null = null;
 
-const createTransporter = (): Transporter => {
-  if (transporter) return transporter;
+const createTransporter = () => {
+  // if (transporter) return transporter;
 
   const emailUser = process.env.EMAIL_USER;
   const emailPassword = process.env.EMAIL_PASSWORD;
@@ -18,7 +18,7 @@ const createTransporter = (): Transporter => {
     );
   }
 
-  transporter = nodemailer.createTransport({
+  let transporter = nodemailer.createTransport({
     service: process.env.EMAIL_SERVICE || "gmail",
     auth: {
       user: emailUser,
@@ -254,4 +254,4 @@ export const getTransactionEmailTemplate = (data: {
   `;
 };
 
-export const getTransporter = (): Transporter => createTransporter();
+export const getTransporter = () => createTransporter();
