@@ -1,0 +1,125 @@
+@media screen and (max-width: 500px) {
+  p {
+    font-size: 14px !important;
+  }
+
+  .auth-container {
+    padding: 0 20px;
+  }
+
+  .logo h1 {
+    font-size: 24px !important;
+  }
+
+  .auth-card h2 {
+    font-size: 20px !important;
+  }
+
+  .auth-card .btn-primary {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .auth-card .form-group input {
+    font-size: 12px;
+  }
+
+  .header-btns {
+    flex-direction: column;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .user-info h1 {
+    font-size: 1.2rem;
+  }
+
+  .dashboard-content {
+    padding: 0;
+  }
+
+  .stat-card {
+    padding: 10px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 18px;
+  }
+
+  .btn {
+    font-size: 12px;
+  }
+
+  .group-list-container {
+    grid-template-columns: 1fr !important;
+  }
+
+  .group-card .group-balance {
+    font-size: 18px;
+    grid-row-start: 3;
+  }
+
+  .group-card {
+    display: grid !important;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto auto auto;
+    padding: 14px;
+  }
+
+  .group-type {
+    justify-self: end;
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .group-actions {
+    width: 100%;
+    grid-column: span 2 / span 2;
+    grid-row-start: 5;
+  }
+
+  .transactions-stats-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .transactions-header {
+    h1 {
+      font-size: 1.2rem;
+    }
+  }
+
+  .group-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  span {
+    width: max-content;
+  }
+
+  .transaction-history-header h3 {
+    font-size: 1rem;
+  }
+
+  .transaction-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .pagination-info {
+    font-size: 10px;
+  }
+
+  .error-page-card {
+    .error-emoji {
+      font-size: 24px;
+    }
+
+    .error-code {
+      font-size: 30px;
+    }
+  }
+}
