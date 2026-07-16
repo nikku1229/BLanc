@@ -4,9 +4,10 @@
   "description": "BLance Budget Tracker Backend",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon src/index.ts",
+    "dev": "nodemon --exec ts-node src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist node_modules"
   },
   "nodemonConfig": {
     "watch": [
