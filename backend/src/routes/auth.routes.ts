@@ -8,8 +8,8 @@ import {
   forgotPassword,
   resetPassword,
   verifyOTP,
-} from "../controllers/auth.controller";
-import { authenticate } from "../middleware/auth.middleware";
+} from "../controllers/auth.controller.ts";
+import { authenticate } from "../middleware/auth.middleware.ts";
 
 const router = express.Router();
 

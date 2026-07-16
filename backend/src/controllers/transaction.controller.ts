@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
-import { Transaction } from "../models/Transaction.model";
-import { Group } from "../models/Group.model";
-import { User } from "../models/User.model";
-import { sendTransactionNotification } from "../utils/notifications";
+import type { Request, Response } from "express";
+import { Transaction } from "../models/Transaction.model.ts";
+import { Group } from "../models/Group.model.ts";
+import { User } from "../models/User.model.ts";
+import { sendTransactionNotification } from "../utils/notifications.ts";
 
 // --------------------- Helpers ---------------------
 const formatTransactionResponse = (transaction: any) => ({

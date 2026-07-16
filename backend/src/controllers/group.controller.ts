@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import { Group } from "../models/Group.model";
-import { Transaction } from "../models/Transaction.model";
+import type { Request, Response } from "express";
+import { Group } from "../models/Group.model.ts";
+import { Transaction } from "../models/Transaction.model.ts";
 
 // --------------------- Helpers ---------------------
 const formatGroupResponse = (group: any) => ({

@@ -5,8 +5,8 @@ import {
   getGroupById,
   updateGroup,
   deleteGroup,
-} from "../controllers/group.controller";
-import { authenticate } from "../middleware/auth.middleware";
+} from "../controllers/group.controller.ts";
+import { authenticate } from "../middleware/auth.middleware.ts";
 
 const router = express.Router();
 
